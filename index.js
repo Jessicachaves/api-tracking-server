@@ -17,16 +17,24 @@ const hashData = (data) => {
 };
 
 app.post('/webhook', async (req, res) => {
-   try {
-        // Imprime o que chegou no log para a gente poder analisar
+    try {
         console.log("DADOS RECEBIDOS:", JSON.stringify(req.body, null, 2));
 
-        // Busca o email e o valor onde eles realmente estão (Kiwify ou Teste)
+        // 1. Pegando e tratando os dados principais
         const email_cliente = req.body?.Customer?.email || req.body?.email_cliente || 'email@naoenviado.com';
+        
         let valorBruto = req.body?.order_value || req.body?.Commissions?.charge_amount || req.body?.valor_compra || 0;
         const valor_compra = (valorBruto > 0 && !valorBruto.toString().includes('.')) ? (valorBruto / 100) : valorBruto;
         const moeda = req.body?.moeda || 'BRL';
 
+        // 2. Tratando os dados adicionais que vieram da Kiwify
+        const telefoneLimpo = req.body?.Customer?.mobile ? req.body.Customer.mobile.replace(/\D/g, '') : '';
+        const cpfLimpo = req.body?.Customer?.CPF ? req.body.Customer.CPF.replace(/\D/g, '') : '';
+        const nomePartes = req.body?.Customer?.full_name ? req.body.Customer.full_name.trim().split(' ') : [''];
+        const primeiroNome = nomePartes[0];
+        const sobrenome = nomePartes.length > 1 ? nomePartes[nomePartes.length - 1] : '';
+
+        // 3. Montando o pacote completo para a Meta
         const metaPayload = {
             data: [
                 {
@@ -34,7 +42,14 @@ app.post('/webhook', async (req, res) => {
                     event_time: Math.floor(Date.now() / 1000),
                     action_source: 'website',
                     user_data: {
-                        em: [hashData(email_cliente)]
+                        em: [hashData(email_cliente)],
+                        ph: [hashData(telefoneLimpo)],
+                        fn: [hashData(primeiroNome)],
+                        ln: [hashData(sobrenome)],
+                        ct: [hashData(req.body?.Customer?.city?.toLowerCase() || '')],
+                        st: [hashData(req.body?.Customer?.state?.toLowerCase() || '')],
+                        zp: [hashData(req.body?.Customer?.zipcode || '')],
+                        country: ['br']
                     },
                     custom_data: {
                         value: valor_compra,
@@ -43,6 +58,8 @@ app.post('/webhook', async (req, res) => {
                 }
             ]
         };
+
+        // Aqui embaixo continua o resto do código que envia para a Meta (axios.post, etc)
 
         // Se tivermos um código de teste no .env, adicionamos ao payload
         if (TEST_EVENT_CODE) {
