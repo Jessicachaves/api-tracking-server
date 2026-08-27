@@ -17,8 +17,14 @@ const hashData = (data) => {
 };
 
 app.post('/webhook', async (req, res) => {
-    try {
-        const { email_cliente, valor_compra, moeda } = req.body;
+   try {
+        // Imprime o que chegou no log para a gente poder analisar
+        console.log("DADOS RECEBIDOS:", JSON.stringify(req.body, null, 2));
+
+        // Busca o email e o valor onde eles realmente estão (Kiwify ou Teste)
+        const email_cliente = req.body?.Customer?.email || req.body?.email_cliente || 'email@naoenviado.com';
+        const valor_compra = req.body?.order_value || req.body?.Commissions?.charge_amount || req.body?.valor_compra || 0;
+        const moeda = req.body?.moeda || 'BRL';
 
         const metaPayload = {
             data: [
@@ -31,7 +37,7 @@ app.post('/webhook', async (req, res) => {
                     },
                     custom_data: {
                         value: valor_compra,
-                        currency: moeda || 'BRL'
+                        currency: moeda
                     }
                 }
             ]
