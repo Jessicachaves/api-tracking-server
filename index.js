@@ -23,7 +23,8 @@ app.post('/webhook', async (req, res) => {
 
         // Busca o email e o valor onde eles realmente estão (Kiwify ou Teste)
         const email_cliente = req.body?.Customer?.email || req.body?.email_cliente || 'email@naoenviado.com';
-        const valor_compra = req.body?.order_value || req.body?.Commissions?.charge_amount || req.body?.valor_compra || 0;
+        let valorBruto = req.body?.order_value || req.body?.Commissions?.charge_amount || req.body?.valor_compra || 0;
+        const valor_compra = (valorBruto > 0 && !valorBruto.toString().includes('.')) ? (valorBruto / 100) : valorBruto;
         const moeda = req.body?.moeda || 'BRL';
 
         const metaPayload = {
