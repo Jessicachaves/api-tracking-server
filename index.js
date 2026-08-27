@@ -16,7 +16,7 @@ const hashData = (data) => {
     return crypto.createHash('sha256').update(data.trim().toLowerCase()).digest('hex');
 };
 
-app.post('/webhook-compra', async (req, res) => {
+app.post('/webhook', async (req, res) => {
     try {
         const { email_cliente, valor_compra, moeda } = req.body;
 
