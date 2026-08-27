@@ -227,6 +227,7 @@ const enviarParaMeta = async (pedido) => {
 // ROTA
 // ---------------------------------------------------------------
 app.post('/webhook', (req, res) => {
+     console.log(JSON.stringify(req.body, null, 2));
   if (!assinaturaValida(req)) {
     console.warn('Assinatura inválida — requisição rejeitada.');
     return res.status(401).send({ error: 'assinatura invalida' });
